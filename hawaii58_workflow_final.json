@@ -1,0 +1,244 @@
+{
+  "name": "Hawaii58 Content Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "notionApi",
+        "applyTo": "database",
+        "databaseId": "1d07e864-3b7b-80b7-9135-c068b625785a",
+        "options": {
+          "filter": {
+            "property": "生成状态",
+            "select": {
+              "equals": "待生成"
+            }
+          }
+        },
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        }
+      },
+      "name": "Notion Trigger",
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "databaseId": "1d07e864-3b7b-80b7-9135-c068b625785a",
+        "pageId": "={{ $json.body.id }}"
+      },
+      "name": "Get Full Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "databaseId": "1d07e864-3b7b-80b7-9135-c068b625785a",
+        "pageId": "={{ $json.id }}",
+        "properties": {
+          "生成状态": {
+            "select": {
+              "name": "生成中"
+            }
+          }
+        }
+      },
+      "name": "Update Status to Processing",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "title",
+              "value": "={{ $json.properties[\"推文标题\"] ? $json.properties[\"推文标题\"].title[0].plain_text : $json.properties[\"正文内容\"].rich_text[0].plain_text.substring(0, 30) + \"...\" }}"
+            },
+            {
+              "name": "content",
+              "value": "={{ $json.properties[\"正文内容\"].rich_text[0].plain_text }}"
+            }
+          ]
+        }
+      },
+      "name": "Set Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDJC5a882ruaC7iC4HyW4pfWe_TZYFOPBw"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": {
+                "parts": [
+                  {
+                    "text": "=请根据以下文章内容，生成一个300字左右的摘要，并提取5个关键词。\\n\\n文章标题：{{ $node[\"Set Content\"].json.title }}\\n\\n文章内容：{{ $node[\"Set Content\"].json.content }}\\n\\n请按以下格式返回：\\n---摘要---\\n[这里是摘要内容]\\n\\n---关键词---\\n1. [关键词1]\\n2. [关键词2]\\n3. [关键词3]\\n4. [关键词4]\\n5. [关键词5]"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "followRedirects": true
+          },
+          "allowUnauthorizedCerts": true,
+          "timeout": 10000
+        }
+      },
+      "name": "Generate with Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// 解析 Gemini API 的响应\nconst responseData = JSON.parse(items[0].json.body || items[0].json);\nconst text = responseData.candidates[0].content.parts[0].text;\n\n// 分离摘要和关键词\nconst parts = text.split('---关键词---');\nconst summaryPart = parts[0];\nconst keywordsPart = parts.length > 1 ? parts[1] : '';\n\nconst summary = summaryPart.replace('---摘要---', '').trim();\n\n// 提取关键词\nconst keywords = keywordsPart\n  .split('\\n')\n  .filter(line => line.trim())\n  .map(line => line.replace(/^\\d+\\.\\s*/, '').trim())\n  .filter(keyword => keyword.length > 0);\n\n// 如果提取失败，提供默认值\nconst finalKeywords = keywords.length > 0 ? keywords : ['自动生成', '内容摘要', '关键词', '智能生成', '文章'];\nconst finalSummary = summary || '系统未能生成有效的摘要，请检查原文内容或手动编辑。';\n\nconsole.log('解析结果:', { summary: finalSummary, keywords: finalKeywords });\n\nreturn [{\n  json: {\n    summary: finalSummary,\n    keywords: finalKeywords,\n    originalPageId: items[0].json.id || items[0].json.pageId || $node[\"Get Full Page\"].json.id\n  }\n}];"
+      },
+      "name": "Parse Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "databaseId": "1d07e864-3b7b-80b7-9135-c068b625785a",
+        "pageId": "={{ $node[\"Get Full Page\"].json.id }}",
+        "properties": {
+          "生成状态": {
+            "select": {
+              "name": "已生成"
+            }
+          },
+          "生成时间": {
+            "date": {
+              "start": "={{ $now }}"
+            }
+          },
+          "摘要": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $node[\"Parse Response\"].json.summary }}"
+                }
+              }
+            ]
+          },
+          "关键词": {
+            "multi_select": "={{ $node[\"Parse Response\"].json.keywords.map(keyword => ({name: keyword})) }}"
+          }
+        }
+      },
+      "name": "Update Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "Notion Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Full Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Full Page": {
+      "main": [
+        [
+          {
+            "node": "Update Status to Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Status to Processing": {
+      "main": [
+        [
+          {
+            "node": "Set Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Content": {
+      "main": [
+        [
+          {
+            "node": "Generate with Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate with Gemini": {
+      "main": [
+        [
+          {
+            "node": "Parse Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Response": {
+      "main": [
+        [
+          {
+            "node": "Update Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "pinData": {}
+}

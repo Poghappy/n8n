@@ -1,0 +1,394 @@
+{
+  "name": "Hawaii58 Simple Content Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "notionApi",
+        "applyTo": "database",
+        "databaseId": "1d07e864-3b7b-80b7-9135-c068b625785a",
+        "options": {
+          "filter": {
+            "property": "生成状态",
+            "select": {
+              "equals": "待生成"
+            }
+          }
+        },
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        }
+      },
+      "name": "Notion Trigger",
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "pageId": "={{ $json.body.id }}"
+      },
+      "name": "Get Full Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "pageId": "={{ $json.id }}",
+        "properties": {
+          "生成状态": {
+            "select": {
+              "name": "生成中"
+            }
+          }
+        }
+      },
+      "name": "Update Status to Processing",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "title",
+              "value": "={{ $json.properties && $json.properties[\"推文标题\"] && $json.properties[\"推文标题\"].title && $json.properties[\"推文标题\"].title.length > 0 ? $json.properties[\"推文标题\"].title[0].plain_text : \"未命名标题\" }}"
+            },
+            {
+              "name": "content",
+              "value": "={{ $json.properties && $json.properties[\"正文内容\"] && $json.properties[\"正文内容\"].rich_text && $json.properties[\"正文内容\"].rich_text.length > 0 ? $json.properties[\"正文内容\"].rich_text[0].plain_text : \"无内容\" }}"
+            }
+          ]
+        }
+      },
+      "name": "Set Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDJC5a882ruaC7iC4HyW4pfWe_TZYFOPBw"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": {
+                "parts": [
+                  {
+                    "text": "=请根据以下文章内容，生成一个300字左右的摘要，并提取5个关键词。\\n\\n文章标题：{{ $node[\"Set Content\"].json.title }}\\n\\n文章内容：{{ $node[\"Set Content\"].json.content }}\\n\\n请按以下格式返回：\\n---摘要---\\n[这里是摘要内容]\\n\\n---关键词---\\n1. [关键词1]\\n2. [关键词2]\\n3. [关键词3]\\n4. [关键词4]\\n5. [关键词5]"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "followRedirects": true
+          },
+          "allowUnauthorizedCerts": true,
+          "timeout": 10000
+        }
+      },
+      "name": "Generate with Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// 解析 Gemini API 的响应\ntry {\n  const responseData = JSON.parse(items[0].json.body || items[0].json);\n  const text = responseData.candidates[0].content.parts[0].text;\n\n  // 分离摘要和关键词\n  const parts = text.split('---关键词---');\n  const summaryPart = parts[0];\n  const keywordsPart = parts.length > 1 ? parts[1] : '';\n\n  const summary = summaryPart.replace('---摘要---', '').trim();\n\n  // 提取关键词\n  const keywords = keywordsPart\n    .split('\\n')\n    .filter(line => line.trim())\n    .map(line => line.replace(/^\\d+\\.\\s*/, '').trim())\n    .filter(keyword => keyword.length > 0);\n\n  // 如果提取失败，提供默认值\n  const finalKeywords = keywords.length > 0 ? keywords : ['自动生成', '内容摘要', '关键词', '智能生成', '文章'];\n  const finalSummary = summary || '系统未能生成有效的摘要，请检查原文内容或手动编辑。';\n\n  console.log('解析结果:', { summary: finalSummary, keywords: finalKeywords });\n\n  return [{\n    json: {\n      summary: finalSummary,\n      keywords: finalKeywords.join(', '),\n      pageId: $node[\"Get Full Page\"].json.id\n    }\n  }];\n} catch (error) {\n  console.error('解析错误:', error);\n  return [{\n    json: {\n      summary: '处理时发生错误，无法生成摘要。',\n      keywords: '错误, 处理失败, 自动生成, 需要修复, 检查配置',\n      pageId: $node[\"Get Full Page\"].json.id,\n      error: error.message\n    }\n  }];\n}"
+      },
+      "name": "Parse Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "operation": "append",
+        "blockId": "={{ $node[\"Get Full Page\"].json.id }}",
+        "blockUi": {
+          "blockValues": {
+            "heading2": [
+              {
+                "heading_2": {
+                  "richText": [
+                    {
+                      "option": "text",
+                      "text": {
+                        "content": "生成摘要"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "name": "Add Heading",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1450, 200]
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "operation": "append",
+        "blockId": "={{ $node[\"Get Full Page\"].json.id }}",
+        "blockUi": {
+          "blockValues": {
+            "paragraph": [
+              {
+                "paragraph": {
+                  "richText": [
+                    {
+                      "option": "text",
+                      "text": {
+                        "content": "={{ $node[\"Parse Response\"].json.summary }}"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "name": "Add Summary",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "operation": "append",
+        "blockId": "={{ $node[\"Get Full Page\"].json.id }}",
+        "blockUi": {
+          "blockValues": {
+            "heading2": [
+              {
+                "heading_2": {
+                  "richText": [
+                    {
+                      "option": "text",
+                      "text": {
+                        "content": "关键词"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "name": "Add Keywords Heading",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1450, 400]
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "operation": "append",
+        "blockId": "={{ $node[\"Get Full Page\"].json.id }}",
+        "blockUi": {
+          "blockValues": {
+            "paragraph": [
+              {
+                "paragraph": {
+                  "richText": [
+                    {
+                      "option": "text",
+                      "text": {
+                        "content": "={{ $node[\"Parse Response\"].json.keywords }}"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "name": "Add Keywords",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1450, 500]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "pageId": "={{ $node[\"Get Full Page\"].json.id }}",
+        "properties": {
+          "生成状态": {
+            "select": {
+              "name": "已生成"
+            }
+          },
+          "生成时间": {
+            "date": {
+              "start": "={{ $now }}"
+            }
+          },
+          "摘要": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{ $node[\"Parse Response\"].json.summary.substring(0, 2000) }}"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "name": "Update Status",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1650, 300]
+    }
+  ],
+  "connections": {
+    "Notion Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Full Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Full Page": {
+      "main": [
+        [
+          {
+            "node": "Update Status to Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Status to Processing": {
+      "main": [
+        [
+          {
+            "node": "Set Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Content": {
+      "main": [
+        [
+          {
+            "node": "Generate with Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate with Gemini": {
+      "main": [
+        [
+          {
+            "node": "Parse Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Response": {
+      "main": [
+        [
+          {
+            "node": "Add Heading",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Heading": {
+      "main": [
+        [
+          {
+            "node": "Add Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Summary": {
+      "main": [
+        [
+          {
+            "node": "Add Keywords Heading",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Keywords Heading": {
+      "main": [
+        [
+          {
+            "node": "Add Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Keywords": {
+      "main": [
+        [
+          {
+            "node": "Update Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  }
+}

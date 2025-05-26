@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    ports:
+      - "5679:5678"
+    environment:
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - N8N_USER_MANAGEMENT_DISABLED=false
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_ALLOW_USER_SIGNUP=true
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - NOTION_CREDENTIALS_ID=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
+      - GEMINI_CREDENTIALS_ID=AIzaSyDWnULs965gaK0D1EGyB5ffNDwP9Kykw70
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./hawaii58_workflow.json:/home/node/.n8n/workflows/hawaii58_workflow.json
+    restart: always
+
+volumes:
+  n8n_data:

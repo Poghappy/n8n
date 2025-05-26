@@ -1,0 +1,11 @@
+{
+  "rulesFile": ".cursorrules",
+  "docs": {
+    "technical": "docs/technical.md",
+    "status": "docs/status.md"
+  },
+  "tasksFile": "tasks/tasks.md",
+  "srcDir": "src",
+  "envFile": ".env",
+  "autoLoad": true
+}

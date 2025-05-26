@@ -1,0 +1,218 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 火鸟门户 API 接口文档（交友模块）
+
+## 基本说明
+
+- 服务名：`dating`
+- 调用方式：`callApi('dating', action, params)`
+- 返回结构：`{ state: int, info: array }`
+  - `state`：100=成功，101=错误，200=失败
+  - `info`：内容数据
+
+---
+
+## 动作列表与参数
+
+### 1. 获取基本参数
+- **action**: `config`
+- **params**:
+  | 参数   | 类型   | 必填 | 说明         |
+  | ------ | ------ | ---- | ------------ |
+  | param  | string | 否   | 多个值用逗号分隔 |
+
+---
+
+### 2. 固定字段
+- **action**: `item`
+- **params**: 无
+
+---
+
+### 3. 交友标签
+- **action**: `tags`
+- **params**: 无
+- **返回**:
+  | 参数     | 类型   | 说明     |
+  | -------- | ------ | -------- |
+  | id       | int    | 分类ID   |
+  | parentid | int    | 上级ID   |
+  | typename | string | 分类名称 |
+  | lower    | array  | 下级分类 |
+
+---
+
+### 4. 交友技能
+- **action**: `skill`
+- **params**: 无
+
+---
+
+### 5. 会员列表
+- **action**: `ilist`
+- **params**:
+  | 参数      | 类型   | 必填 | 说明           |
+  | --------- | ------ | ---- | -------------- |
+  | typeid    | int    | 否   | 会员类型       |
+  | sex       | int    | 否   | 0女1男         |
+  | addr      | int    | 否   | 区域ID         |
+  | age       | string | 否   | 年龄区间 18-28 |
+  | purpose   | int    | 否   | 交友目的       |
+  | marriage  | int    | 否   | 婚姻情况       |
+  | height    | string | 否   | 身高区间       |
+  | bodytype  | int    | 否   | 体型           |
+  | housetag  | int    | 否   | 居住情况       |
+  | workstatus| int    | 否   | 工作状态       |
+  | income    | int    | 否   | 收入           |
+  | education | int    | 否   | 学历           |
+  | smoke     | int    | 否   | 吸烟           |
+  | drink     | int    | 否   | 喝酒           |
+  | workandrest| int   | 否   | 作息时间       |
+  | cartag    | int    | 否   | 购车           |
+  | maxconsume| int    | 否   | 最大消费       |
+  | romance   | int    | 否   | 制造浪漫       |
+  | property  | string | 否   | r:推荐         |
+  | page      | int    | 否   | 页码           |
+  | pageSize  | int    | 否   | 每页显示数量   |
+
+---
+
+### 6. 会员详细信息
+- **action**: `member`
+- **params**:
+  | 参数   | 类型 | 必填 | 说明     |
+  | ------ | ---- | ---- | -------- |
+  | param  | int  | 是   | 会员ID   |
+
+---
+
+### 7. 会员相册分类
+- **action**: `albumType`
+- **params**:
+  | 参数   | 类型 | 必填 | 说明     |
+  | ------ | ---- | ---- | -------- |
+  | param  | int  | 是   | 会员ID   |
+
+---
+
+### 8. 相册详细信息
+- **action**: `albumTypeInfo`
+- **params**:
+  | 参数    | 类型 | 必填 | 说明         |
+  | ------- | ---- | ---- | ------------ |
+  | userid  | int  | 是   | 会员ID       |
+  | typeid  | int  | 是   | 相册分类ID   |
+
+---
+
+### 9. 照片列表
+- **action**: `albumList`
+- **params**:
+  | 参数    | 类型 | 必填 | 说明     |
+  | ------- | ---- | ---- | -------- |
+  | userid  | int  | 是   | 会员ID   |
+
+---
+
+### 10. 照片详细信息
+- **action**: `albumInfo`
+- **params**:
+  | 参数    | 类型 | 必填 | 说明     |
+  | ------- | ---- | ---- | -------- |
+  | param   | int  | 是   | 照片ID   |
+
+---
+
+### 11. 照片评论
+- **action**: `albumCommon`
+- **params**:
+  | 参数    | 类型 | 必填 | 说明     |
+  | ------- | ---- | ---- | -------- |
+  | albumid | int  | 是   | 照片ID   |
+
+---
+
+### 12. 私信列表
+- **action**: `review`
+- **params**:
+  | 参数    | 类型 | 必填 | 说明     |
+  | ------- | ---- | ---- | -------- |
+  | userid  | int  | 是   | 会员ID   |
+  | read    | int  | 否   | 0全部1未读2已读 |
+  | page    | int  | 否   | 页码     |
+  | pageSize| int  | 否   | 每页显示数量 |
+
+---
+
+### 13. 私信详情
+- **action**: `reviewDetail`
+- **params**:
+  | 参数    | 类型 | 必填 | 说明     |
+  | ------- | ---- | ---- | -------- |
+  | ufrom   | int  | 是   | 发信人ID |
+  | uto     | int  | 是   | 收信人ID |
+
+---
+
+### 14. 成功故事
+- **action**: `story`
+- **params**:
+  | 参数    | 类型 | 必填 | 说明     |
+  | ------- | ---- | ---- | -------- |
+  | process | int  | 否   | 0约会中1恋爱中2结婚啦 |
+  | tags    | int  | 否   | 标签     |
+  | page    | int  | 否   | 页码     |
+  | pageSize| int  | 否   | 每页显示数量 |
+
+---
+
+### 15. 故事详情
+- **action**: `storyDetail`
+- **params**:
+  | 参数    | 类型 | 必填 | 说明     |
+  | ------- | ---- | ---- | -------- |
+  | param   | int  | 是   | 故事ID   |
+
+---
+
+### 16. 相亲活动
+- **action**: `activity`
+- **params**:
+  | 参数    | 类型 | 必填 | 说明     |
+  | ------- | ---- | ---- | -------- |
+  | page    | int  | 否   | 页码     |
+  | pageSize| int  | 否   | 每页显示数量 |
+
+---
+
+### 17. 活动详情
+- **action**: `activityDetail`
+- **params**:
+  | 参数    | 类型 | 必填 | 说明     |
+  | ------- | ---- | ---- | -------- |
+  | param   | int  | 是   | 活动ID   |
+
+---
+
+### 18. 活动报名
+- **action**: `activityTake`
+- **params**:
+  | 参数    | 类型 | 必填 | 说明     |
+  | ------- | ---- | ---- | -------- |
+  | aid     | int  | 是   | 活动ID   |
+
+---
+
+## 返回值通用说明
+
+- `state`：100=成功，101=错误，200=失败
+- `info`：接口返回的内容，结构见各 action 说明
+
+---
+
+> 文档来源：火鸟门户交友模块API文档截图  
+> 整理人：AI 自动化助手  
+> 更新时间：2024-06

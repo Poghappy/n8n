@@ -1,0 +1,155 @@
+{
+  "summary": {
+    "total_tests": 8,
+    "successful": 8,
+    "failed": 0,
+    "success_rate": "100.0%",
+    "timestamp": "2025-05-26T19:37:57.840Z"
+  },
+  "api_key": "AIzaSyCGkz...vDLw",
+  "results": [
+    {
+      "test": "地理编码: Honolulu, HI",
+      "success": true,
+      "message": "成功获取坐标",
+      "data": {
+        "address": "Honolulu, HI, USA",
+        "location": {
+          "lat": 21.3098845,
+          "lng": -157.8581401
+        }
+      },
+      "timestamp": "2025-05-26T19:37:55.698Z"
+    },
+    {
+      "test": "地理编码: Waikiki Beach, Honolulu, HI",
+      "success": true,
+      "message": "成功获取坐标",
+      "data": {
+        "address": "Waikiki, Honolulu, HI 96815, USA",
+        "location": {
+          "lat": 21.2793462,
+          "lng": -157.8291847
+        }
+      },
+      "timestamp": "2025-05-26T19:37:55.909Z"
+    },
+    {
+      "test": "地理编码: Pearl Harbor, HI",
+      "success": true,
+      "message": "成功获取坐标",
+      "data": {
+        "address": "Pearl Harbor, Hawaii, USA",
+        "location": {
+          "lat": 21.3548614,
+          "lng": -157.97681545
+        }
+      },
+      "timestamp": "2025-05-26T19:37:56.099Z"
+    },
+    {
+      "test": "地理编码: Maui, HI",
+      "success": true,
+      "message": "成功获取坐标",
+      "data": {
+        "address": "Maui, Hawaii, USA",
+        "location": {
+          "lat": 20.7983626,
+          "lng": -156.3319253
+        }
+      },
+      "timestamp": "2025-05-26T19:37:56.298Z"
+    },
+    {
+      "test": "反向地理编码: 檀香山市中心",
+      "success": true,
+      "message": "成功获取地址",
+      "data": {
+        "address": "229 Queen Emma Square, Honolulu, HI 96813, USA"
+      },
+      "timestamp": "2025-05-26T19:37:56.658Z"
+    },
+    {
+      "test": "反向地理编码: 威基基海滩",
+      "success": true,
+      "message": "成功获取地址",
+      "data": {
+        "address": "2201 Kalākaua Ave, Honolulu, HI 96815, USA"
+      },
+      "timestamp": "2025-05-26T19:37:56.939Z"
+    },
+    {
+      "test": "距离计算: 檀香山到威基基",
+      "success": true,
+      "message": "成功计算距离",
+      "data": {
+        "distance": "5.8 km",
+        "duration": "13 mins"
+      },
+      "timestamp": "2025-05-26T19:37:57.122Z"
+    },
+    {
+      "test": "附近搜索: 檀香山附近的餐厅",
+      "success": true,
+      "message": "找到 3 个结果",
+      "data": {
+        "count": 3,
+        "first_result": {
+          "business_status": "OPERATIONAL",
+          "geometry": {
+            "location": {
+              "lat": 21.2719278,
+              "lng": -157.8228386
+            },
+            "viewport": {
+              "northeast": {
+                "lat": 21.27312467989272,
+                "lng": -157.8212438201072
+              },
+              "southwest": {
+                "lat": 21.27042502010728,
+                "lng": -157.8239434798927
+              }
+            }
+          },
+          "icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/restaurant-71.png",
+          "icon_background_color": "#FF9E67",
+          "icon_mask_base_uri": "https://maps.gstatic.com/mapfiles/place_api/icons/v2/restaurant_pinlet",
+          "name": "Lulu's Waikiki",
+          "opening_hours": {
+            "open_now": true
+          },
+          "photos": [
+            {
+              "height": 3456,
+              "html_attributions": [
+                "<a href=\"https://maps.google.com/maps/contrib/115733887254223887719\">LuLu&#39;s Waikiki</a>"
+              ],
+              "photo_reference": "AXQCQNRU4wSeYCbSqkD6ITajK3qmvVk0faw2fGyJZpb20xl-l6d5xEJLfTIQoK3I1NaNg6MRJTPePr12FjieTNiB4Y8EEyupycrOYgeYTINIphJyYiUrx65Z-Q8WRFeNF7T8ZKjqczq46-8Fy47NB-AGKuZSo4ddl6vWCSbv0heOl215ZzbeTxPdn7Z-jt1G_xzlei5Ta5a9yh4U9qtdrGrDEGbAw05Dlg7ubEeHLqp1NUX-4ECru1b5cNtrvtrj1RVJ8bbivPNSuFp9dt_iYtQxizEcC2c1UBOBjnuCdQtcIWooz6gy",
+              "width": 5184
+            }
+          ],
+          "place_id": "ChIJ0zgno3ByAHwRTctl9GVdzCE",
+          "plus_code": {
+            "compound_code": "75CG+QV Honolulu, Hawaii",
+            "global_code": "73H475CG+QV"
+          },
+          "price_level": 2,
+          "rating": 4.3,
+          "reference": "ChIJ0zgno3ByAHwRTctl9GVdzCE",
+          "scope": "GOOGLE",
+          "types": [
+            "restaurant",
+            "bar",
+            "food",
+            "point_of_interest",
+            "establishment"
+          ],
+          "user_ratings_total": 4985,
+          "vicinity": "2586 Kalākaua Ave, Honolulu"
+        }
+      },
+      "timestamp": "2025-05-26T19:37:57.840Z"
+    }
+  ]
+}

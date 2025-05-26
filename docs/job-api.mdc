@@ -1,0 +1,324 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 火鸟门户 API 接口文档（招聘模块）
+
+## 基本说明
+
+- 服务名：`job`
+- 调用方式：`callApi('job', action, params)`
+- 返回结构：`{ state: int, info: array }`
+  - `state`：100=成功，101=错误，200=失败
+  - `info`：内容数据
+
+---
+
+## 动作列表与参数
+
+### 1. 获取基本参数
+- **action**: `config`
+- **params**:
+  | 参数   | 类型   | 必填 | 说明         |
+  | ------ | ------ | ---- | ------------ |
+  | param  | string | 否   | 多个值用逗号分隔 |
+
+---
+
+### 2. 招聘地区
+- **action**: `addr`
+- **params**:
+  | 参数     | 类型 | 必填 | 说明         |
+  | -------- | ---- | ---- | ------------ |
+  | type     | int  | 否   | 分类ID       |
+  | page     | int  | 否   | 页码         |
+  | pageSize | int  | 否   | 每页显示数量 |
+
+---
+
+### 3. 职位类别
+- **action**: `type`
+- **params**:
+  | 参数   | 类型 | 必填 | 说明     |
+  | ------ | ---- | ---- | -------- |
+  | param  | int  | 否   | 分类ID   |
+
+---
+
+### 4. 行业类别
+- **action**: `industry`
+- **params**:
+  | 参数   | 类型 | 必填 | 说明     |
+  | ------ | ---- | ---- | -------- |
+  | param  | int  | 否   | 分类ID   |
+
+---
+
+### 5. 招聘分类
+- **action**: `item`
+- **params**:
+  | 参数   | 类型 | 必填 | 说明     |
+  | ------ | ---- | ---- | -------- |
+  | param  | int  | 否   | 分类ID   |
+
+---
+
+### 6. 企业列表
+- **action**: `company`
+- **params**:
+  | 参数     | 类型   | 必填 | 说明         |
+  | -------- | ------ | ---- | ------------ |
+  | typeid   | int    | 否   | 性质         |
+  | scale    | int    | 否   | 规模         |
+  | industry | int    | 否   | 行业         |
+  | addrid   | int    | 否   | 区域ID       |
+  | title    | string | 否   | 关键字       |
+  | property | string | 否   | r推荐m名企u紧急 |
+  | orderby  | string | 否   | 排序         |
+  | page     | int    | 否   | 页码         |
+  | pageSize | int    | 否   | 每页显示数量 |
+
+---
+
+### 7. 企业详细信息
+- **action**: `companyDetail`
+- **params**:
+  | 参数   | 类型 | 必填 | 说明     |
+  | ------ | ---- | ---- | -------- |
+  | param  | int  | 是   | 公司ID   |
+
+---
+
+### 8. 伯乐列表
+- **action**: `bole`
+- **params**:
+  | 参数     | 类型   | 必填 | 说明         |
+  | -------- | ------ | ---- | ------------ |
+  | cid      | int    | 否   | 公司ID       |
+  | type     | int    | 否   | 身份类型     |
+  | addr     | int    | 否   | 区域         |
+  | status   | int    | 否   | 招聘状态     |
+  | industry | int    | 否   | 行业         |
+  | zhineng  | int    | 否   | 职能         |
+  | title    | string | 否   | 姓名/职位/公司 |
+  | orderby  | int    | 否   | 排序         |
+  | page     | int    | 否   | 页码         |
+  | pageSize | int    | 否   | 每页显示数量 |
+
+---
+
+### 9. 伯乐详细信息
+- **action**: `boleDetail`
+- **params**:
+  | 参数   | 类型 | 必填 | 说明     |
+  | ------ | ---- | ---- | -------- |
+  | param  | int  | 是   | 伯乐ID   |
+
+---
+
+### 10. 招聘职位
+- **action**: `post`
+- **params**:
+  | 参数        | 类型   | 必填 | 说明         |
+  | ----------- | ------ | ---- | ------------ |
+  | addr        | int    | 否   | 工作地点     |
+  | type        | int    | 否   | 职位类别     |
+  | experience  | int    | 否   | 工作经验     |
+  | educational | int    | 否   | 学历要求     |
+  | sex         | int    | 否   | 性别         |
+  | nature      | int    | 否   | 职位性质     |
+  | salary      | int    | 否   | 薪资范围     |
+  | company     | int    | 否   | 公司ID       |
+  | bole        | int    | 否   | 伯乐ID       |
+  | title       | string | 否   | 职位/公司名  |
+  | property    | string | 否   | h热门u紧急r推荐 |
+  | page        | int    | 否   | 页码         |
+  | pageSize    | int    | 否   | 每页显示数量 |
+
+---
+
+### 11. 职位详细信息
+- **action**: `detail`
+- **params**:
+  | 参数   | 类型 | 必填 | 说明     |
+  | ------ | ---- | ---- | -------- |
+  | param  | int  | 是   | 职位ID   |
+
+---
+
+### 12. 简历列表
+- **action**: `resume`
+- **params**:
+  | 参数        | 类型   | 必填 | 说明         |
+  | ----------- | ------ | ---- | ------------ |
+  | addr        | int    | 否   | 区域         |
+  | type        | int    | 否   | 职位类别     |
+  | sex         | int    | 否   | 性别         |
+  | nature      | int    | 否   | 职位性质     |
+  | workyear    | int    | 否   | 工作经验     |
+  | educational | int    | 否   | 学历要求     |
+  | orderby     | int    | 否   | 排序         |
+  | title       | string | 否   | 姓名/学校/专业 |
+  | page        | int    | 否   | 页码         |
+  | pageSize    | int    | 否   | 每页显示数量 |
+
+---
+
+### 13. 简历详细信息
+- **action**: `resumeDetail`
+- **params**:
+  | 参数   | 类型 | 必填 | 说明     |
+  | ------ | ---- | ---- | -------- |
+  | param  | int  | 是   | 简历ID   |
+
+---
+
+### 14. 工资统计列表
+- **action**: `wage`
+- **params**:
+  | 参数     | 类型   | 必填 | 说明         |
+  | -------- | ------ | ---- | ------------ |
+  | addr     | int    | 否   | 区域ID       |
+  | industry | int    | 否   | 行业ID       |
+  | company  | int    | 否   | 公司ID       |
+  | title    | string | 否   | 职位/公司名  |
+  | orderby  | int    | 否   | 排序         |
+  | page     | int    | 否   | 页码         |
+  | pageSize | int    | 否   | 每页显示数量 |
+
+---
+
+### 15. 企业评论
+- **action**: `companyReview`
+- **params**:
+  | 参数     | 类型 | 必填 | 说明     |
+  | -------- | ---- | ---- | -------- |
+  | company  | int  | 是   | 企业ID   |
+  | userid   | int  | 否   | 会员ID   |
+  | page     | int  | 否   | 页码     |
+  | pageSize | int  | 否   | 每页显示数量 |
+
+---
+
+### 16. 伯乐评论
+- **action**: `boleReview`
+- **params**:
+  | 参数     | 类型 | 必填 | 说明     |
+  | -------- | ---- | ---- | -------- |
+  | bole     | int  | 是   | 伯乐ID   |
+  | userid   | int  | 否   | 会员ID   |
+  | page     | int  | 否   | 页码     |
+  | pageSize | int  | 否   | 每页显示数量 |
+
+---
+
+### 17. 一句话求职/招聘
+- **action**: `sentence`
+- **params**:
+  | 参数     | 类型 | 必填 | 说明     |
+  | -------- | ---- | ---- | -------- |
+  | type     | int  | 否   | 0招聘1求职 |
+  | id       | int  | 否   | 信息ID   |
+  | page     | int  | 否   | 页码     |
+  | pageSize | int  | 否   | 每页显示数量 |
+
+---
+
+### 18. 发布一句话求职/招聘
+- **action**: `sendSentence`
+- **params**:
+  | 参数     | 类型   | 必填 | 说明     |
+  | -------- | ------ | ---- | -------- |
+  | type     | int    | 是   | 0招聘1求职 |
+  | title    | string | 是   | 标题     |
+  | people   | string | 是   | 联系人   |
+  | contact  | string | 是   | 联系方式 |
+  | password | string | 是   | 管理密码 |
+  | note     | string | 是   | 说明     |
+
+---
+
+### 19. 招聘会场
+- **action**: `fairsCenter`
+- **params**:
+  | 参数     | 类型   | 必填 | 说明     |
+  | -------- | ------ | ---- | -------- |
+  | addr     | int    | 否   | 区域ID   |
+  | title    | string | 否   | 标题/地址 |
+  | page     | int    | 否   | 页码     |
+  | pageSize | int    | 否   | 每页显示数量 |
+
+---
+
+### 20. 会场详细信息
+- **action**: `fairsCenterDetail`
+- **params**:
+  | 参数   | 类型 | 必填 | 说明     |
+  | ------ | ---- | ---- | -------- |
+  | param  | int  | 是   | 信息ID   |
+
+---
+
+### 21. 招聘会
+- **action**: `fairs`
+- **params**:
+  | 参数     | 类型   | 必填 | 说明     |
+  | -------- | ------ | ---- | -------- |
+  | time     | date   | 否   | 举办时间 |
+  | addr     | int    | 否   | 区域ID   |
+  | center   | int    | 否   | 会场ID   |
+  | title    | string | 否   | 标题/地址 |
+  | page     | int    | 否   | 页码     |
+  | pageSize | int    | 否   | 每页显示数量 |
+
+---
+
+### 22. 招聘会详细信息
+- **action**: `fairsDetail`
+- **params**:
+  | 参数   | 类型 | 必填 | 说明     |
+  | ------ | ---- | ---- | -------- |
+  | param  | int  | 是   | 信息ID   |
+
+---
+
+### 23. 招聘资讯
+- **action**: `news`
+- **params**:
+  | 参数     | 类型 | 必填 | 说明     |
+  | -------- | ---- | ---- | -------- |
+  | typeid   | int  | 否   | 分类ID   |
+  | page     | int  | 否   | 页码     |
+  | pageSize | int  | 否   | 每页显示数量 |
+
+---
+
+### 24. 招聘资讯详细信息
+- **action**: `newsDetail`
+- **params**:
+  | 参数   | 类型 | 必填 | 说明     |
+  | ------ | ---- | ---- | -------- |
+  | param  | int  | 是   | 信息ID   |
+
+---
+
+### 25. 招聘资讯分类
+- **action**: `newsType`
+- **params**:
+  | 参数   | 类型 | 必填 | 说明     |
+  | ------ | ---- | ---- | -------- |
+  | param  | int  | 否   | 分类ID   |
+
+---
+
+## 返回值通用说明
+
+- `state`：100=成功，101=错误，200=失败
+- `info`：接口返回的内容，结构见各 action 说明
+
+---
+
+> 文档来源：招聘模块api.txt  
+> 整理人：AI 自动化助手  
+> 更新时间：2024-06

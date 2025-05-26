@@ -1,0 +1,236 @@
+{
+  "name": "Hawaii WeChat Publisher",
+  "nodes": [
+    {
+      "parameters": {
+        "databaseId": "1d07e8643b7b80b79135c068b625785a",
+        "rule": {
+          "interval": [
+            {
+              "field": "properties.状态.select.name",
+              "operation": "equal",
+              "value": "待发布"
+            }
+          ]
+        }
+      },
+      "name": "Notion Trigger",
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1,
+      "position": [100, 300],
+      "credentials": {
+        "notionApi": {
+          "id": "{{NOTION_CREDENTIALS_ID}}",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "pageId": "={{$node[\"Notion Trigger\"].json[\"body\"][\"page\"][\"id\"]}}",
+        "returnAll": true,
+        "simple": true
+      },
+      "name": "获取文章内容",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [300, 300],
+      "credentials": {
+        "notionApi": {
+          "id": "{{NOTION_CREDENTIALS_ID}}",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "resource": "completion",
+        "text": "=请对以下文章内容进行两项处理：\n1. 生成不超过100字的文章摘要，用于引导语\n2. 将正文转换为适合微信公众号的HTML格式，保持段落结构，适当添加排版\n\n原文：{{$node[\"获取文章内容\"].json[\"properties\"][\"正文内容\"][\"rich_text\"][0][\"plain_text\"]}}",
+        "options": {
+          "model": "gemini-pro",
+          "temperature": 0.7,
+          "maxTokens": 2048
+        }
+      },
+      "name": "内容处理",
+      "type": "n8n-nodes-base.googleBard",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "credentials": {
+        "googleBardApi": {
+          "id": "{{GEMINI_CREDENTIALS_ID}}",
+          "name": "Gemini API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "title",
+              "value": "={{$node[\"获取文章内容\"].json[\"properties\"][\"推文标题\"][\"title\"][0][\"text\"][\"content\"]}}"
+            },
+            {
+              "name": "digest",
+              "value": "={{$node[\"内容处理\"].json[\"choices\"][0][\"message\"][\"content\"].split(\"\\n\\n\")[0]}}"
+            },
+            {
+              "name": "content",
+              "value": "={{$node[\"内容处理\"].json[\"choices\"][0][\"message\"][\"content\"].split(\"\\n\\n\").slice(1).join(\"\\n\\n\")}}"
+            },
+            {
+              "name": "scheduled_time",
+              "value": "={{$node[\"获取文章内容\"].json[\"properties\"][\"发布时间\"][\"date\"][\"start\"]}}"
+            }
+          ]
+        }
+      },
+      "name": "格式化数据",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$node[\"Credentials\"].json[\"WECHAT_API_URL\"]}}",
+        "authentication": "genericCredentials",
+        "method": "POST",
+        "body": {
+          "articles": [
+            {
+              "title": "={{$node[\"格式化数据\"].json[\"title\"]}}",
+              "author": "夏威夷华人平台",
+              "digest": "={{$node[\"格式化数据\"].json[\"digest\"]}}",
+              "content": "={{$node[\"格式化数据\"].json[\"content\"]}}",
+              "thumb_media_id": "{{WECHAT_DEFAULT_THUMB_ID}}",
+              "need_open_comment": 1
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "发布草稿",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "pageId": "={{$node[\"Notion Trigger\"].json[\"body\"][\"page\"][\"id\"]}}",
+        "properties": {
+          "状态": {
+            "select": {
+              "name": "已发布"
+            }
+          },
+          "文章摘要": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "={{$node[\"格式化数据\"].json[\"digest\"]}}"
+                }
+              }
+            ]
+          },
+          "封面图": {
+            "url": "https://placeholder.com/600x400"
+          }
+        }
+      },
+      "name": "更新状态",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1100, 300],
+      "credentials": {
+        "notionApi": {
+          "id": "{{NOTION_CREDENTIALS_ID}}",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "WECHAT_API_URL",
+              "value": "https://api.weixin.qq.com/cgi-bin/draft/add?access_token={{WX_API_TOKEN}}"
+            }
+          ]
+        }
+      },
+      "name": "Credentials",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [100, 500]
+    }
+  ],
+  "connections": {
+    "Notion Trigger": {
+      "main": [
+        [
+          {
+            "node": "获取文章内容",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取文章内容": {
+      "main": [
+        [
+          {
+            "node": "内容处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "内容处理": {
+      "main": [
+        [
+          {
+            "node": "格式化数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "格式化数据": {
+      "main": [
+        [
+          {
+            "node": "发布草稿",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "发布草稿": {
+      "main": [
+        [
+          {
+            "node": "更新状态",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["WeChat", "Notion", "Hawaii"],
+  "triggerCount": 1
+}

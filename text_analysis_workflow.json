@@ -1,0 +1,80 @@
+{
+    "name": "Text Analysis Workflow",
+    "nodes": [
+        {
+            "parameters": {
+                "filePath": "/Users/zhiledeng/夏威夷华人平台/sample_text.txt"
+            },
+            "name": "Read Binary File",
+            "type": "n8n-nodes-base.readBinaryFile",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "id": "8b874e39-9566-4c34-8981-f8c0c0612345"
+        },
+        {
+            "parameters": {
+                "authentication": "apiKey",
+                "resource": "completion",
+                "text": "={{ $json.data }}",
+                "options": {
+                    "model": "gpt-3.5-turbo",
+                    "prompt": "分析这段文本并提供关键见解："
+                }
+            },
+            "name": "OpenAI",
+            "type": "n8n-nodes-base.openAi",
+            "typeVersion": 1,
+            "position": [
+                460,
+                300
+            ],
+            "id": "8b874e39-9566-4c34-8981-f8c0c0612346"
+        },
+        {
+            "parameters": {
+                "filePath": "/Users/zhiledeng/夏威夷华人平台/analysis_result.txt",
+                "options": {}
+            },
+            "name": "Write Binary File",
+            "type": "n8n-nodes-base.writeBinaryFile",
+            "typeVersion": 1,
+            "position": [
+                670,
+                300
+            ],
+            "id": "8b874e39-9566-4c34-8981-f8c0c0612347"
+        }
+    ],
+    "connections": {
+        "Read Binary File": {
+            "main": [
+                [
+                    {
+                        "node": "OpenAI",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI": {
+            "main": [
+                [
+                    {
+                        "node": "Write Binary File",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": true,
+    "settings": {},
+    "tags": [],
+    "pinData": {},
+    "versionId": "8b874e39-9566-4c34-8981-f8c0c0612348"
+}

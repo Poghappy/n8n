@@ -1,0 +1,251 @@
+{
+  "name": "WeChat Content Publisher",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "database",
+        "operation": "getAll",
+        "databaseId": "={{$node.Notion_Trigger.json.body.database_id}}",
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "发布状态",
+              "value": "待发布"
+            }
+          ]
+        }
+      },
+      "name": "获取待发布内容",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "credentials": {
+        "notionApi": {
+          "id": "{{NOTION_CREDENTIALS_ID}}",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "resource": "completion",
+        "text": "=请对以下文章内容进行智能排版和优化，并生成一段简短的引导语（不超过100字）。保持原文的主要内容不变，但使其更适合微信公众号阅读。\n\n原文：{{$node[\"获取待发布内容\"].json[\"properties\"][\"正文内容\"][\"rich_text\"][0][\"text\"][\"content\"]}}",
+        "options": {
+          "model": "gemini-pro",
+          "temperature": 0.7,
+          "maxTokens": 2048
+        }
+      },
+      "name": "生成摘要和排版",
+      "type": "n8n-nodes-base.googleBard",
+      "typeVersion": 1,
+      "position": [440, 300],
+      "credentials": {
+        "googleBardApi": {
+          "id": "{{GEMINI_CREDENTIALS_ID}}",
+          "name": "Gemini API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "{{STABLE_DIFFUSION_API_URL}}",
+        "method": "POST",
+        "body": {
+          "prompt": "=生成一张适合以下文章标题的封面图：{{$node[\"获取待发布内容\"].json[\"properties\"][\"推文标题\"][\"title\"][0][\"text\"][\"content\"]}}",
+          "negative_prompt": "text, watermark, low quality, blurry",
+          "steps": 30,
+          "width": 1200,
+          "height": 675
+        },
+        "options": {}
+      },
+      "name": "生成封面图",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "title",
+              "value": "={{$node[\"获取待发布内容\"].json[\"properties\"][\"推文标题\"][\"title\"][0][\"text\"][\"content\"]}}"
+            },
+            {
+              "name": "digest",
+              "value": "={{$node[\"生成摘要和排版\"].json[\"choices\"][0][\"message\"][\"content\"].split(\"\\n\\n\")[0]}}"
+            },
+            {
+              "name": "content",
+              "value": "={{$node[\"生成摘要和排版\"].json[\"choices\"][0][\"message\"][\"content\"].split(\"\\n\\n\").slice(1).join(\"\\n\\n\")}}"
+            },
+            {
+              "name": "thumb_url",
+              "value": "={{$node[\"生成封面图\"].json[\"image_url\"]}}"
+            },
+            {
+              "name": "scheduled_time",
+              "value": "={{$node[\"获取待发布内容\"].json[\"properties\"][\"发布时间\"][\"date\"][\"start\"]}}"
+            }
+          ]
+        }
+      },
+      "name": "准备发布数据",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [840, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.weixin.qq.com/cgi-bin/draft/add?access_token={{WX_API_TOKEN}}",
+        "method": "POST",
+        "body": {
+          "articles": [
+            {
+              "title": "={{$node[\"准备发布数据\"].json[\"title\"]}}",
+              "author": "={{WX_AUTHOR_NAME}}",
+              "digest": "={{$node[\"准备发布数据\"].json[\"digest\"]}}",
+              "content": "={{$node[\"准备发布数据\"].json[\"content\"]}}",
+              "thumb_url": "={{$node[\"准备发布数据\"].json[\"thumb_url\"]}}",
+              "need_open_comment": 1
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "发布到公众号",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1040, 300]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "pageId": "={{$node[\"获取待发布内容\"].json[\"id\"]}}",
+        "properties": {
+          "发布状态": {
+            "select": {
+              "name": "已发布"
+            }
+          },
+          "封面图链接": {
+            "url": "={{$node[\"生成封面图\"].json[\"image_url\"]}}"
+          }
+        }
+      },
+      "name": "更新发布状态",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1240, 300],
+      "credentials": {
+        "notionApi": {
+          "id": "{{NOTION_CREDENTIALS_ID}}",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "properties.发布状态.select.name",
+              "operation": "equal",
+              "value": "待发布"
+            }
+          ]
+        },
+        "databaseId": "{{NOTION_DATABASE_ID}}"
+      },
+      "name": "Notion_Trigger",
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1,
+      "position": [40, 300],
+      "credentials": {
+        "notionApi": {
+          "id": "{{NOTION_CREDENTIALS_ID}}",
+          "name": "Notion account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Notion_Trigger": {
+      "main": [
+        [
+          {
+            "node": "获取待发布内容",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取待发布内容": {
+      "main": [
+        [
+          {
+            "node": "生成摘要和排版",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成摘要和排版": {
+      "main": [
+        [
+          {
+            "node": "生成封面图",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成封面图": {
+      "main": [
+        [
+          {
+            "node": "准备发布数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "准备发布数据": {
+      "main": [
+        [
+          {
+            "node": "发布到公众号",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "发布到公众号": {
+      "main": [
+        [
+          {
+            "node": "更新发布状态",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["WeChat", "Notion", "Content"],
+  "triggerCount": 1
+}

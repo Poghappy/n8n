@@ -1,0 +1,18 @@
+# 简化版 Dockerfile 用于测试
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 只复制必要的文件
+COPY package*.json ./
+RUN npm ci --only=production
+
+# 复制源代码
+COPY src/ ./src/
+COPY .env ./
+
+# 暴露端口
+EXPOSE 3000
+
+# 启动命令
+CMD ["npm", "start"]

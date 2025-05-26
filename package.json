@@ -1,0 +1,33 @@
+{
+  "name": "hawaiihub-automation",
+  "version": "1.0.0",
+  "description": "夏威夷华人平台自动化系统 - 火鸟门户集成",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node src/test/mapTest.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "@googlemaps/google-maps-services-js": "^3.3.42",
+    "@notionhq/client": "^2.2.14",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "google-auth-library": "^9.15.1",
+    "node-fetch": "^3.3.2",
+    "puppeteer": "^21.6.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "hawaiihub",
+    "firebird",
+    "automation",
+    "google-maps",
+    "portal"
+  ],
+  "author": "夏威夷华人平台",
+  "license": "MIT"
+}

@@ -1,0 +1,165 @@
+{
+  "name": "Hawaii Deals Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "operation": "equals",
+              "value": 8
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        "authentication": "headerAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer={{$node.Credentials.data.geminiApiKey}}"
+            }
+          ]
+        },
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": [
+                {
+                  "parts": [
+                    {
+                      "text": "请搜索夏威夷当前最热门的3个购物优惠信息，包括：商店名称、具体位置、折扣详情和有效期。请用中文回复。"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "name": "Gemini API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": `
+// 处理Gemini返回的数据
+const response = items[0].json.candidates[0].content.parts[0].text;
+
+// 格式化为文章
+const article = {
+  title: "【夏威夷好物推荐】今日特惠精选",
+  content: response,
+  digest: "精选夏威夷最新购物优惠信息",
+  thumb_media_id: "YOUR_MEDIA_ID", // 需要替换为实际的图片media_id
+};
+
+return {json: article};
+        `
+      },
+      "name": "Format Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.weixin.qq.com/cgi-bin/draft/add?access_token={{$node.Credentials.data.wechatAccessToken}}",
+        "authentication": "none",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "articles",
+              "value": "={{$node['Format Content'].data}}"
+            }
+          ]
+        }
+      },
+      "name": "WeChat Draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Gemini API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini API": {
+      "main": [
+        [
+          {
+            "node": "Format Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Content": {
+      "main": [
+        [
+          {
+            "node": "WeChat Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "credentials": {
+    "Credentials": {
+      "type": "nodeCredentials",
+      "properties": {
+        "geminiApiKey": {
+          "type": "string",
+          "required": true
+        },
+        "wechatAccessToken": {
+          "type": "string",
+          "required": true
+        }
+      }
+    }
+  }
+} 
